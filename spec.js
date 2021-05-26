@@ -20,7 +20,7 @@ module.exports = {
     // accT = accumulated Transformation so far
     // msg = message containing transformation about to be applied
 
-    const { members } = msg.value.content
+    const { invited, consented, members } = msg.value.content
     
     /* Validate INIT */
 
@@ -40,6 +40,13 @@ module.exports = {
     }
 
     /* Validate UPDATE */
+
+    const canUpdate = (
+      accT.members[msg.value.author] ||
+      accT.consented[msg.value.author] ||
+      accT.invited[msg.value.author]
+    )
+    if (!canUpdate) return false
 
     if (members) {
       const ok = Object.keys(members).every(member => accT.consented[member])
