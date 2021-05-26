@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node index.js"
   },
   "repository": {
     "type": "git",
@@ -15,5 +15,11 @@
   "bugs": {
     "url": "https://github.com/mixmix/fusion-identity-test/issues"
   },
-  "homepage": "https://github.com/mixmix/fusion-identity-test#readme"
+  "homepage": "https://github.com/mixmix/fusion-identity-test#readme",
+  "dependencies": {
+    "@tangle/simple-set": "^2.0.0",
+    "scuttle-testbot": "^1.5.2",
+    "ssb-backlinks": "^2.1.1",
+    "ssb-crut": "^3.0.2"
+  }
 }
