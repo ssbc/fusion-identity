@@ -6,7 +6,6 @@ module.exports = {
   staticProps: {
     id: {
       type: 'string',
-      pattern: '^@.+.fusion1$'
     }
   },
 
