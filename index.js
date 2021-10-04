@@ -8,7 +8,7 @@ const createServer = () => {
         .use(require('ssb-db2/compat/db'))
         .use(require('ssb-db2/compat/history-stream'))
         .use(require('ssb-db2/compat/feedstate'))
-  
+
   return stack({ db2: true })
 }
 
@@ -34,6 +34,19 @@ alice.db.post(m => {
 const key = keys.generate().id
 const fusionId = 'ssb:identity/fusion/' + key.substring(1, key.indexOf('.ed25519'))
 
+/*
+  DB2 note: inside ssb-crut we use this query to get updates:
+  and(
+    type(spec.type),
+    slowEqual(`value.content.tangles.${spec.tangle}.root`, id)
+   )
+
+   using null instead of id, we can get all the roots
+
+   Needs to be fixed to not use slowEqual
+*/
+
+
 crut.create({ id: fusionId, members: { add: [alice.id] } }, (err, rootId) => {
   crut.update(rootId, { members: { add: [bob.id] } }, (err) => {
     if (err) console.error('err: must invite before adding bob as member')
@@ -45,7 +58,7 @@ crut.create({ id: fusionId, members: { add: [alice.id] } }, (err, rootId) => {
       bobWait.promise.then(() => {
         bobCrut.update(rootId, { consented: { add: [bob.id] } }, (err) => {
           if (err) throw err
-          
+
           bobCrut.read(rootId, (err, identity) => {
 
             console.log('\nFINAL STATE:')
