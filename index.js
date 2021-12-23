@@ -34,19 +34,6 @@ alice.db.post(m => {
 const key = keys.generate().id
 const fusionId = 'ssb:identity/fusion/' + key.substring(1, key.indexOf('.ed25519'))
 
-/*
-  DB2 note: inside ssb-crut we use this query to get updates:
-  and(
-    type(spec.type),
-    slowEqual(`value.content.tangles.${spec.tangle}.root`, id)
-   )
-
-   using null instead of id, we can get all the roots
-
-   Needs to be fixed to not use slowEqual
-*/
-
-
 crut.create({ id: fusionId, members: { add: [alice.id] } }, (err, rootId) => {
   console.log(`alice (${alice.id}) adding self as member`)
   crut.update(rootId, { members: { add: [bob.id] } }, (err) => {
@@ -63,10 +50,27 @@ crut.create({ id: fusionId, members: { add: [alice.id] } }, (err, rootId) => {
 
           console.log("bob consents")
 
-          bobCrut.read(rootId, (err, identity) => {
+          bobCrut.read(rootId, async (err, identity) => {
 
             console.log('\nFINAL STATE:')
             console.log(JSON.stringify(identity, null, 2))
+
+            const { where, and, slowEqual, type, toPromise } = require('ssb-db2/operators')
+
+            const identityRoots = await bob.db.query(
+               where(
+                 and(
+                   slowEqual('value.content.tangles.fusion.root', null),
+                   type('fusion')
+                 )
+               ), toPromise()
+             )
+
+            const identities = await Promise.all(identityRoots.map((root) => {
+              return bobCrut.read(root.key)
+            }))
+
+            console.log("all identities", JSON.stringify(identities, null, 2))
 
             alice.close()
             bob.close()
