@@ -50,31 +50,36 @@ crut.create({ id: fusionId, members: { add: [alice.id] } }, (err, rootId) => {
 
           console.log("bob consents")
 
-          bobCrut.read(rootId, async (err, identity) => {
+          bobCrut.read(rootId, (err, identity) => {
 
             console.log('\nFINAL STATE:')
             console.log(JSON.stringify(identity, null, 2))
 
-            const { where, and, slowEqual, type, toPromise } = require('ssb-db2/operators')
+            bobCrut.tombstone(rootId, { reason: 'goodbye!' }, async () => {
 
-            const identityRoots = await bob.db.query(
-               where(
-                 and(
-                   slowEqual('value.content.tangles.fusion.root', null),
-                   type('fusion')
-                 )
-               ), toPromise()
-             )
+              console.log("tombstoned fusion")
 
-            const identities = await Promise.all(identityRoots.map((root) => {
-              return bobCrut.read(root.key)
-            }))
+              const { where, and, slowEqual, type, toPromise } = require('ssb-db2/operators')
 
-            console.log("all identities", JSON.stringify(identities, null, 2))
+              const identityRoots = await bob.db.query(
+                where(
+                  and(
+                    slowEqual('value.content.tangles.fusion.root', null),
+                    type('fusion')
+                  )
+                ), toPromise()
+              )
 
-            alice.close()
-            bob.close()
-            carol.close()
+              const identities = await Promise.all(identityRoots.map((root) => {
+                return bobCrut.read(root.key)
+              }))
+
+              console.log("all identities", JSON.stringify(identities, null, 2))
+
+              alice.close()
+              bob.close()
+              carol.close()
+            })
           })
         })
       })
