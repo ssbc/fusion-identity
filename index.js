@@ -48,16 +48,20 @@ const fusionId = 'ssb:identity/fusion/' + key.substring(1, key.indexOf('.ed25519
 
 
 crut.create({ id: fusionId, members: { add: [alice.id] } }, (err, rootId) => {
+  console.log(`alice (${alice.id}) adding self as member`)
   crut.update(rootId, { members: { add: [bob.id] } }, (err) => {
     if (err) console.error('err: must invite before adding bob as member')
     // console.log(err) // see full error
 
     crut.update(rootId, { invited: { add: [bob.id, carol.id] } }, (err) => {
       if (err) throw err
+      console.log(`invited bob (${bob.id}) & carol (${carol.id})`)
 
       bobWait.promise.then(() => {
         bobCrut.update(rootId, { consented: { add: [bob.id] } }, (err) => {
           if (err) throw err
+
+          console.log("bob consents")
 
           bobCrut.read(rootId, (err, identity) => {
 
