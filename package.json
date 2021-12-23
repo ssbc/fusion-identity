@@ -17,10 +17,9 @@
   },
   "homepage": "https://github.com/mixmix/fusion-identity-test#readme",
   "dependencies": {
-    "@tangle/simple-set": "^2.0.0",
+    "@tangle/simple-set": "^2.1.0",
     "p-defer": "^3.0.0",
     "scuttle-testbot": "^1.5.2",
-    "ssb-backlinks": "^2.1.1",
     "ssb-crut": "^3.0.2"
   }
 }
