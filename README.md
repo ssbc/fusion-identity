@@ -8,6 +8,8 @@ Operations:
  - consent [!] - crut consented (self)
  - tombstone [!] - built into CRU(T)
 
+ - redirect [!]
+
 Stateful:
  - entrust (private message) []
    - need state for this, only first should send
@@ -15,7 +17,6 @@ Stateful:
  - proof of key (optional) []
 
 Need modelling:
- - redirect []
  - attestation []
 
 Do we even need this now?

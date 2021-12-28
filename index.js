@@ -1,6 +1,7 @@
 const keys = require('ssb-keys')
 const Crut = require('ssb-crut')
-const spec = require('./spec')
+const fusionSpec = require('./specs/fusion')
+const redirectSpec = require('./specs/redirect')
 const pDefer = require('p-defer')
 
 const createServer = () => {
@@ -16,8 +17,8 @@ const alice = createServer()
 const bob = createServer()
 const carol = createServer()
 
-const crut = new Crut(alice, spec)
-const bobCrut = new Crut(bob, spec)
+const aliceCrut = new Crut(alice, fusionSpec)
+const bobCrut = new Crut(bob, fusionSpec)
 
 let messagesLeft = 2
 const bobWait = pDefer()
@@ -31,16 +32,20 @@ alice.db.post(m => {
   console.log("transformation", JSON.stringify(m.value.content, null, 2))
 })
 
-const key = keys.generate().id
-const fusionId = 'ssb:identity/fusion/' + key.substring(1, key.indexOf('.ed25519'))
+function getFusionKey() {
+  const key = keys.generate().id
+  return 'ssb:identity/fusion/' + key.substring(1, key.indexOf('.ed25519'))
+}
 
-crut.create({ id: fusionId, members: { add: [alice.id] } }, (err, rootId) => {
+const fusionId = getFusionKey()
+
+aliceCrut.create({ id: fusionId, members: { add: [alice.id] } }, (err, rootId) => {
   console.log(`alice (${alice.id}) adding self as member`)
-  crut.update(rootId, { members: { add: [bob.id] } }, (err) => {
+  aliceCrut.update(rootId, { members: { add: [bob.id] } }, (err) => {
     if (err) console.error('err: must invite before adding bob as member')
     // console.log(err) // see full error
 
-    crut.update(rootId, { invited: { add: [bob.id, carol.id] } }, (err) => {
+    aliceCrut.update(rootId, { invited: { add: [bob.id, carol.id] } }, (err) => {
       if (err) throw err
       console.log(`invited bob (${bob.id}) & carol (${carol.id})`)
 
@@ -55,7 +60,7 @@ crut.create({ id: fusionId, members: { add: [alice.id] } }, (err, rootId) => {
             console.log('\nFINAL STATE:')
             console.log(JSON.stringify(identity, null, 2))
 
-            bobCrut.tombstone(rootId, { reason: 'goodbye!' }, async () => {
+            bobCrut.tombstone(rootId, { reason: 'lost keys!' }, async () => {
 
               console.log("tombstoned fusion")
 
@@ -76,9 +81,23 @@ crut.create({ id: fusionId, members: { add: [alice.id] } }, (err, rootId) => {
 
               console.log("all identities", JSON.stringify(identities, null, 2))
 
-              alice.close()
-              bob.close()
-              carol.close()
+              const newFusionId = getFusionKey()
+
+              aliceCrut.create({ id: newFusionId, members: { add: [alice.id] } }, (err, rootId) => {
+                console.log(`alice (${alice.id}) created a new fusion`)
+
+                const aliceRedirectCrut = new Crut(alice, redirectSpec)
+
+                aliceRedirectCrut.create({ old: fusionId, new: newFusionId }, (err, rootId) => {
+                  console.log(`alice (${alice.id}) created a redirect`)
+
+                  setTimeout(() => { // wait for writes
+                    alice.close()
+                    bob.close()
+                    carol.close()
+                  }, 1000)
+                })
+              })
             })
           })
         })
