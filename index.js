@@ -1,8 +1,9 @@
+const pDefer = require('p-defer')
 const keys = require('ssb-keys')
 const Crut = require('ssb-crut')
 const fusionSpec = require('./specs/fusion')
 const redirectSpec = require('./specs/redirect')
-const pDefer = require('p-defer')
+const attestationSpec = require('./specs/attestation')
 
 const createServer = () => {
   const stack = require('scuttle-testbot')
@@ -29,7 +30,11 @@ alice.db.post(m => {
       bobWait.resolve()
   })
 
-  console.log("transformation", JSON.stringify(m.value.content, null, 2))
+  console.log("alice transformation", JSON.stringify(m.value.content, null, 2))
+})
+
+bob.db.post(m => {
+  console.log("bob transformation", JSON.stringify(m.value.content, null, 2))
 })
 
 function getFusionKey() {
@@ -88,14 +93,24 @@ aliceCrut.create({ id: fusionId, members: { add: [alice.id] } }, (err, rootId) =
 
                 const aliceRedirectCrut = new Crut(alice, redirectSpec)
 
-                aliceRedirectCrut.create({ old: fusionId, new: newFusionId }, (err, rootId) => {
+                aliceRedirectCrut.create({ old: fusionId, new: newFusionId }, (err, redirectId) => {
                   console.log(`alice (${alice.id}) created a redirect`)
 
-                  setTimeout(() => { // wait for writes
-                    alice.close()
-                    bob.close()
-                    carol.close()
-                  }, 1000)
+                  const bobAttCrut = new Crut(bob, attestationSpec)
+
+                  bobAttCrut.create({ target: redirectId, position: 'confirm', reason: 'seems legit' }, (err, attestationId) => {
+
+                    console.log(`bob (${bob.id}) attests redirect`)
+
+                    bobAttCrut.tombstone(attestationId, { reason: 'nevermind' }, (err) => {
+
+                      setTimeout(() => { // wait for writes
+                      alice.close()
+                        bob.close()
+                        carol.close()
+                      }, 1000)
+                    })
+                  })
                 })
               })
             })
