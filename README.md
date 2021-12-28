@@ -9,15 +9,13 @@ Operations:
  - tombstone [!] - built into CRU(T)
 
  - redirect [!]
+ - attestation [!]
 
 Stateful:
  - entrust (private message) []
    - need state for this, only first should send
    - needs crut members operation on reception
  - proof of key (optional) []
-
-Need modelling:
- - attestation []
 
 Do we even need this now?
  - Fix slowEqual in crut: https://gitlab.com/ahau/lib/ssb-crut/-/merge_requests/13
