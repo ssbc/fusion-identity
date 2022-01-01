@@ -48,10 +48,21 @@ module.exports = {
 
           entrust(ssb, rootId, keys, ssb.id, (err) => {
             if (err) return cb(err)
-            else return cb(null, rootId)
+            else return cb(null, {
+              keys,
+              rootId
+            })
           })
         })
       },
+
+      invite(fusion, peerId, cb) {
+        crut.update(fusion.rootId, { invited: { add: [peerId] } }, cb)
+      },
+
+      read(fusion, cb) {
+        crut.read(fusion.rootId, cb)
+      }
     }
   }
 }

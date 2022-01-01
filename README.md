@@ -5,7 +5,7 @@ Spec: https://github.com/ssb-ngi-pointer/fusion-identity-spec
 Methods:
  - [!] Create(cb)
    - init (members) + send key to self
- - [] Invite(fusionId, peerId, cb)
+ - [!] Invite(fusionId, peerId, cb)
  - [] Consent(fusionId, cb)
    - Automatically takes the "first" invite
  - [] Tombstone(fusionId, reason, cb)
@@ -13,7 +13,7 @@ Methods:
  - [] Invitations(cb)
    - All non-consented invites
  - [] Fusions(cb)
- - [] Hydrate(fusionId, cb)
+ - [!] Read(fusionId, cb)
  - [] Redirect(oldFusionId, newFusionId, cb)
  - [] Attest(redirectId, reason, cb)
  - [] RemoveAttest(attestId, reason, cb)

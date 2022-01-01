@@ -22,7 +22,7 @@ test('create fusion identity', (t) => {
 
   const fusion = Fusion.init(alice)
 
-  fusion.create((err, rootId) => {
+  fusion.create((err) => {
     t.error(err, 'no err for create()')
 
     alice.db.query(
@@ -34,5 +34,33 @@ test('create fusion identity', (t) => {
         alice.close(t.end)
       })
     )
+  })
+})
+
+test('invite', (t) => {
+  const alice = createServer()
+  const bob = createServer()
+
+  const fusion = Fusion.init(alice)
+
+  fusion.create((err, fusionData) => {
+    t.error(err, 'no err for create()')
+
+    fusion.invite(fusionData, bob.id, (err) => {
+
+      fusion.read(fusionData, (err, state) => {
+
+        t.equal(state.states.length, 1, '1 state')
+
+        const currentState = state.states[0]
+
+        t.equal(currentState.invited.length, 1, '1 invited')
+        t.equal(currentState.members.length, 1, '1 member')
+        t.equal(currentState.consented.length, 0, '0 consented')
+
+        bob.close()
+        alice.close(t.end)
+      })
+    })
   })
 })
