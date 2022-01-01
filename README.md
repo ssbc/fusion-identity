@@ -6,7 +6,7 @@ Methods:
  - [!] Create(cb)
    - init (members) + send key to self
  - [!] Invite(fusionId, peerId, cb)
- - [] Consent(fusionId, cb)
+ - [!] Consent(fusionId, cb)
    - Automatically takes the "first" invite
  - [] Tombstone(fusionId, reason, cb)
 

@@ -60,9 +60,13 @@ module.exports = {
         crut.update(fusion.rootId, { invited: { add: [peerId] } }, cb)
       },
 
+      consent(fusion, cb) {
+        crut.update(fusion.rootId, { consented: { add: [ssb.id] } }, cb)
+      },
+
       read(fusion, cb) {
         crut.read(fusion.rootId, cb)
-      }
+      },
     }
   }
 }

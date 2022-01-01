@@ -1,9 +1,10 @@
 const test = require('tape')
+const TestBot = require('scuttle-testbot')
 const Fusion = require('../')
 const { toCallback } = require('ssb-db2/operators')
 
 const createServer = () => {
-  const stack = require('scuttle-testbot')
+  const stack = TestBot
         .use(require('ssb-db2/compat/db'))
         .use(require('ssb-db2/compat/history-stream'))
         .use(require('ssb-db2/compat/feedstate'))
@@ -37,29 +38,48 @@ test('create fusion identity', (t) => {
   })
 })
 
-test('invite', (t) => {
+test('invite + consent', (t) => {
   const alice = createServer()
   const bob = createServer()
 
-  const fusion = Fusion.init(alice)
+  const aliceFusion = Fusion.init(alice)
+  const bobFusion = Fusion.init(bob)
 
-  fusion.create((err, fusionData) => {
+  aliceFusion.create((err, fusionData) => {
     t.error(err, 'no err for create()')
 
-    fusion.invite(fusionData, bob.id, (err) => {
+    aliceFusion.invite(fusionData, bob.id, (err) => {
+      t.error(err, 'no err for invite()')
 
-      fusion.read(fusionData, (err, state) => {
-
+      aliceFusion.read(fusionData, (err, state) => {
+        t.error(err, 'no err for read()')
         t.equal(state.states.length, 1, '1 state')
 
-        const currentState = state.states[0]
+        const aliceState = state.states[0]
 
-        t.equal(currentState.invited.length, 1, '1 invited')
-        t.equal(currentState.members.length, 1, '1 member')
-        t.equal(currentState.consented.length, 0, '0 consented')
+        t.equal(aliceState.invited.length, 1, '1 invited')
+        t.equal(aliceState.members.length, 1, '1 member')
+        t.equal(aliceState.consented.length, 0, '0 consented')
 
-        bob.close()
-        alice.close(t.end)
+        TestBot.replicate({ from: alice, to: bob }, (err) => {
+          // FIXME: test "open" invitations here
+
+          bobFusion.consent(fusionData, (err) => {
+            t.error(err, 'no err for consent()')
+
+            bobFusion.read(fusionData, (err, state) => {
+              const bobState = state.states[0]
+
+              t.equal(bobState.invited.length, 1, '1 invited')
+              // note members are with proof-of-key
+              t.equal(bobState.members.length, 1, '1 member')
+              t.equal(bobState.consented.length, 1, '1 consented')
+
+              bob.close()
+              alice.close(t.end)
+            })
+          })
+        })
       })
     })
   })
