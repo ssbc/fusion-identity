@@ -20,9 +20,6 @@ const createServer = () => {
 test('create fusion identity', (t) => {
   const alice = createServer()
 
-  alice.box2.setReady()
-  alice.box2.registerIsGroup(recp => recp.startsWith('ssb:identity/fusion/'))
-
   const fusion = Fusion.init(alice)
 
   fusion.create((err, rootId) => {

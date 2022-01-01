@@ -29,6 +29,9 @@ module.exports = {
   init(ssb) {
     if (!ssb.box2) throw new Error('fusion identity needs ssb-db2-box2')
 
+    ssb.box2.setReady()
+    ssb.box2.registerIsGroup(recp => recp.startsWith('ssb:identity/fusion/'))
+
     const crut = new Crut(ssb, fusionSpec)
 
     return {

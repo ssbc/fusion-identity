@@ -31,6 +31,8 @@ To discuss:
  - Update spec to use box2 and group slot for private messages?
  - Update spec to use crut message format?
  - db2 box2?
+   - should this be any?
+     https://github.com/ssb-ngi-pointer/ssb-db2/blob/da776b23ae888a280b9cb30dc4e4262b55de052a/db.js#L319
 
 -----
 
