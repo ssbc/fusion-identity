@@ -3,6 +3,8 @@ const fusionSpec = require('./specs/fusion')
 const SSBURI = require('ssb-uri2')
 const ssbKeys = require('ssb-keys')
 
+const { where, and, slowEqual, type, toCallback } = require('ssb-db2/operators')
+
 function getFusionKey() {
   const keys = ssbKeys.generate()
 
@@ -23,6 +25,22 @@ function entrust(ssb, rootId, keys, recipient, cb) {
     fusionRoot: rootId,
     recps: [keys.id, recipient]
   }, cb)
+}
+
+function allFusions(ssb, crut, cb) {
+  ssb.db.query(
+    where(
+      and(
+        slowEqual('value.content.tangles.fusion.root', null),
+        type('fusion')
+      )
+    ), toCallback((err, identityRoots) => {
+      if (err) return cb(err)
+      Promise.all(identityRoots.map((root) => {
+        return crut.read(root.key)
+      })).then((identities) => { cb(null, identities) })
+    })
+  )
 }
 
 module.exports = {
@@ -67,6 +85,26 @@ module.exports = {
       read(fusion, cb) {
         crut.read(fusion.rootId, cb)
       },
+
+      tombstone(fusion, reason, cb) {
+        crut.tombstone(fusion.rootId, { reason }, cb)
+      },
+
+      all(cb) {
+        allFusions(ssb, crut, (err, identities) => {
+          if (err) return cb(err)
+
+          cb(null, identities.filter(x => !x.states.some(y => y.tombstone)))
+        })
+      },
+
+      tombstoned(cb) {
+        allFusions(ssb, crut, (err, identities) => {
+          if (err) return cb(err)
+
+          cb(null, identities.filter(x => x.states.some(y => y.tombstone)))
+        })
+      }
     }
   }
 }

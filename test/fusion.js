@@ -84,3 +84,32 @@ test('invite + consent', (t) => {
     })
   })
 })
+
+test('tombstone', (t) => {
+  const alice = createServer()
+
+  const fusion = Fusion.init(alice)
+
+  fusion.create((err, fusionData) => {
+    t.error(err, 'no err for create()')
+
+    fusion.all((err, fusions) => {
+      t.error(err, 'no err for all()')
+      t.equal(fusions.length, 1, '1 fusion')
+
+      fusion.tombstone(fusionData, 'bye', (err) => {
+        t.error(err, 'no err for tombstone()')
+
+        fusion.all((err, fusions) => {
+          t.equal(fusions.length, 0, '0 active fusions')
+
+          fusion.tombstoned((err, fusions) => {
+            t.equal(fusions.length, 1, '1 tombstoned fusions')
+
+            alice.close(t.end)
+          })
+        })
+      })
+    })
+  })
+})

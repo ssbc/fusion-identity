@@ -8,11 +8,12 @@ Methods:
  - [!] Invite(fusionId, peerId, cb)
  - [!] Consent(fusionId, cb)
    - Automatically takes the "first" invite
- - [] Tombstone(fusionId, reason, cb)
+ - [!] Tombstone(fusionId, reason, cb)
 
  - [] Invitations(cb)
    - All non-consented invites
- - [] Fusions(cb)
+ - [!] Fusions(cb)
+ - [!] Tombstoned(cb)
  - [!] Read(fusionId, cb)
  - [] Redirect(oldFusionId, newFusionId, cb)
  - [] Attest(redirectId, reason, cb)
