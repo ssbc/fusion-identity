@@ -1,11 +1,8 @@
 {
-  "name": "fusion-identity-test",
+  "name": "Fusion identities",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "scripts": {
-    "test": "node index.js"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mixmix/fusion-identity-test.git"
@@ -18,8 +15,18 @@
   "homepage": "https://github.com/mixmix/fusion-identity-test#readme",
   "dependencies": {
     "@tangle/simple-set": "^2.1.0",
+    "ssb-crut": "^3.0.2",
+    "ssb-db2-box2": "^0.5.0",
+    "ssb-uri2": "^1.6.0"
+  },
+  "devDependencies": {
     "p-defer": "^3.0.0",
     "scuttle-testbot": "^1.5.2",
-    "ssb-crut": "^3.0.2"
+    "tap-bail": "^1.0.0",
+    "tap-spec": "^5.0.0",
+    "tape": "^5.2.2"
+  },
+  "scripts": {
+    "test": "tape test/*.js | tap-bail | tap-spec"
   }
 }
