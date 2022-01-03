@@ -62,21 +62,30 @@ test('invite + consent', (t) => {
         t.equal(aliceState.consented.length, 0, '0 consented')
 
         TestBot.replicate({ from: alice, to: bob }, (err) => {
-          // FIXME: test "open" invitations here
 
-          bobFusion.consent(fusionData, (err) => {
+          bobFusion.invitations((err, invited) => {
             t.error(err, 'no err for consent()')
+            t.equal(invited.length, 1, '1 invitation')
 
-            bobFusion.read(fusionData, (err, state) => {
-              const bobState = state.states[0]
+            bobFusion.consent(fusionData, (err) => {
+              t.error(err, 'no err for consent()')
 
-              t.equal(bobState.invited.length, 1, '1 invited')
-              // note members are with proof-of-key
-              t.equal(bobState.members.length, 1, '1 member')
-              t.equal(bobState.consented.length, 1, '1 consented')
+              bobFusion.invitations((err, invited) => {
+                t.error(err, 'no err for consent()')
+                t.equal(invited.length, 0, '0 open invitation')
 
-              bob.close()
-              alice.close(t.end)
+                bobFusion.read(fusionData, (err, state) => {
+                  const bobState = state.states[0]
+
+                  t.equal(bobState.invited.length, 1, '1 invited')
+                  // note members are with proof-of-key
+                  t.equal(bobState.members.length, 1, '1 member')
+                  t.equal(bobState.consented.length, 1, '1 consented')
+
+                  bob.close()
+                  alice.close(t.end)
+                })
+              })
             })
           })
         })

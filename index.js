@@ -90,11 +90,24 @@ module.exports = {
         crut.tombstone(fusion.rootId, { reason }, cb)
       },
 
+      // all fusions
+
+      invitations(cb) {
+        allFusions(ssb, crut, (err, identities) => {
+          if (err) return cb(err)
+
+          const invited = identities.filter(x => x.states.some(s => s.invited.includes(ssb.id)))
+          const consented = identities.filter(x => x.states.some(s => s.consented.includes(ssb.id)))
+
+          cb(null, invited.filter(x => !consented.includes(x)))
+        })
+      },
+
       all(cb) {
         allFusions(ssb, crut, (err, identities) => {
           if (err) return cb(err)
 
-          cb(null, identities.filter(x => !x.states.some(y => y.tombstone)))
+          cb(null, identities.filter(x => !x.states.some(s => s.tombstone)))
         })
       },
 
@@ -102,7 +115,7 @@ module.exports = {
         allFusions(ssb, crut, (err, identities) => {
           if (err) return cb(err)
 
-          cb(null, identities.filter(x => x.states.some(y => y.tombstone)))
+          cb(null, identities.filter(x => x.states.some(s => s.tombstone)))
         })
       }
     }

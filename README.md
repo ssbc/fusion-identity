@@ -10,7 +10,7 @@ Methods:
    - Automatically takes the "first" invite
  - [!] Tombstone(fusionId, reason, cb)
 
- - [] Invitations(cb)
+ - [!] Invitations(cb)
    - All non-consented invites
  - [!] Fusions(cb)
  - [!] Tombstoned(cb)
