@@ -1,21 +1,35 @@
 const test = require('tape')
 const TestBot = require('scuttle-testbot')
+const ssbKeys = require('ssb-keys')
 const Fusion = require('../')
 const { toCallback } = require('ssb-db2/operators')
 
-const createServer = () => {
+const createServer = (name, keys, startUnclean = false) => {
   const stack = TestBot
         .use(require('ssb-db2/compat/db'))
         .use(require('ssb-db2/compat/history-stream'))
         .use(require('ssb-db2/compat/feedstate'))
         .use(require('ssb-db2-box2'))
 
-  return stack({
+  const opts = {
     db2: true,
     box2: {
       alwaysbox2: true
     }
-  })
+  }
+
+  if (name && keys) {
+    opts.name = name
+    opts.keys = keys
+    opts.startUnclean = startUnclean
+  }
+
+  const ssb = stack(opts)
+
+  const dm_hex = '4e2ce5ca70cd12cc0cee0a5285b61fbc3b5f4042287858e613f9a8bf98a70d39'
+  ssb.box2.addOwnDMKey(Buffer.from(dm_hex, 'hex'))
+
+  return ssb
 }
 
 test('create fusion identity', (t) => {
@@ -117,6 +131,40 @@ test('tombstone', (t) => {
 
             alice.close(t.end)
           })
+        })
+      })
+    })
+  })
+})
+
+test('keys loaded on startup', (t) => {
+  const keys = ssbKeys.generate()
+  let alice = createServer('alice', keys)
+
+  const aliceFusion = Fusion.init(alice)
+
+  aliceFusion.create((err, fusionData) => {
+    t.error(err, 'no err for create()')
+
+    alice.close(() => {
+      // simulate we restarted and load state again
+      alice = createServer('alice', keys, true)
+
+      const aliceFusion2 = Fusion.init(alice)
+
+      alice.db.publish({
+        type: 'post',
+        message: 'hello world',
+        recps: [fusionData.keys.id]
+      }, (err, msg) => {
+        t.error(err, 'no err for publish()')
+
+        t.equal(typeof msg.value.content, 'string', 'message is encrypted')
+
+        alice.db.get(msg.key, (err, dbMsg) => {
+          t.equal(dbMsg.content.message, 'hello world', 'can read message')
+
+          alice.close(t.end)
         })
       })
     })

@@ -23,7 +23,7 @@ function entrust(ssb, rootId, keys, recipient, cb) {
     type: 'fusion/entrust',
     secretKey: keys.private, // FIXME: also not correct here
     fusionRoot: rootId,
-    recps: [keys.id, recipient]
+    recps: [keys.id, recipient] // fusionId in first slot
   }, cb)
 }
 
@@ -46,11 +46,27 @@ function allFusions(ssb, crut, cb) {
 module.exports = {
   init(ssb) {
     if (!ssb.box2) throw new Error('fusion identity needs ssb-db2-box2')
+    if (!ssb.box2.hasOwnDMKey()) throw new Error('fusion identity needs own box2 DM key')
 
     ssb.box2.setReady()
-    ssb.box2.registerIsGroup(recp => recp.startsWith('ssb:identity/fusion/'))
+
+    ssb.db.query(
+      where(
+        type('fusion/entrust')
+      ), toCallback((err, msgs) => {
+        msgs.forEach(msg => {
+          const { recps, secretKey } = msg.value.content
+          // FIXME: validate keys (recps[0] must match secretKey)
+          ssb.box2.addGroupKey(recps[0], Buffer.from(secretKey, 'hex'))
+        })
+
+        ssb.box2.registerIsGroup(recp => recp.startsWith('ssb:identity/fusion/'))
+      })
+    )
 
     const crut = new Crut(ssb, fusionSpec)
+
+    // FIXME: automatic stuff (proof-of-key, entrust)
 
     return {
       create(cb) {
@@ -62,7 +78,7 @@ module.exports = {
           const { /*type, format, */ data } = SSBURI.decompose(keys.id)
 
           // FIXME: Buffer.from is not correct!
-          ssb.box2.addGroupKey(keys.id, Buffer.from(keys.private))
+          ssb.box2.addGroupKey(keys.id, Buffer.from(keys.private, 'hex'))
 
           entrust(ssb, rootId, keys, ssb.id, (err) => {
             if (err) return cb(err)
