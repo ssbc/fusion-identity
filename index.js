@@ -36,11 +36,12 @@ function allFusions(ssb, crut, cb) {
         slowEqual('value.content.tangles.fusion.root', null),
         type('fusion')
       )
-    ), toCallback((err, identityRoots) => {
+    ),
+    toCallback((err, identityRoots) => {
       if (err) return cb(err)
-      Promise.all(identityRoots.map((root) => {
-        return crut.read(root.key)
-      })).then((identities) => { cb(null, identities) })
+
+      Promise.all(identityRoots.map(root => crut.read(root.key)))
+        .then((identities) => { cb(null, identities) })
     })
   )
 }
@@ -50,12 +51,13 @@ module.exports = {
     if (!ssb.box2) throw new Error('fusion identity needs ssb-db2-box2')
     if (!ssb.box2.hasOwnDMKey()) throw new Error('fusion identity needs own box2 DM key')
 
-    ssb.box2.setReady()
-
     ssb.db.query(
       where(
         type('fusion/entrust')
-      ), toCallback((err, msgs) => {
+      ),
+      toCallback((err, msgs) => {
+        if (err) return
+
         msgs.forEach(msg => {
           const { recps, secretKey } = msg.value.content
           // FIXME: validate keys (recps[0] must match secretKey)
@@ -131,7 +133,7 @@ module.exports = {
         crut.create(data, (err, rootId) => {
           if (err) return cb(err)
 
-          const { /*type, format, */ data } = SSBURI.decompose(keys.id)
+          const { data } = SSBURI.decompose(keys.id)
 
           // FIXME: Buffer.from is not correct!
           ssb.box2.addGroupKey(keys.id, Buffer.from(keys.private, 'hex'))

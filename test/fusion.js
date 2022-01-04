@@ -29,6 +29,8 @@ const createServer = (name, keys, startUnclean = false) => {
   const dm_hex = '4e2ce5ca70cd12cc0cee0a5285b61fbc3b5f4042287858e613f9a8bf98a70d39'
   ssb.box2.addOwnDMKey(Buffer.from(dm_hex, 'hex'))
 
+  ssb.box2.setReady()
+
   return ssb
 }
 
