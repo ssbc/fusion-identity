@@ -78,14 +78,14 @@ test('invite + consent', (t) => {
         TestBot.replicate({ from: alice, to: bob }, (err) => {
 
           bobFusion.invitations((err, invited) => {
-            t.error(err, 'no err for consent()')
-            t.equal(invited.length, 1, '1 invitation')
+            t.error(err, 'no err for invitations()')
+            t.equal(invited.length, 1, '1 open invitation')
 
             bobFusion.consent(fusionData, (err) => {
               t.error(err, 'no err for consent()')
 
               bobFusion.invitations((err, invited) => {
-                t.error(err, 'no err for consent()')
+                t.error(err, 'no err for invitations()')
                 t.equal(invited.length, 0, '0 open invitation')
 
                 bobFusion.read(fusionData, (err, state) => {
