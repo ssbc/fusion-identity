@@ -66,7 +66,59 @@ module.exports = {
 
     const crut = new Crut(ssb, fusionSpec)
 
-    // FIXME: automatic stuff (proof-of-key, entrust)
+    function runAutomaticActions(msgValue) {
+      const { type, consented, tangles } = msgValue.content
+
+      if (type === 'fusion') {
+        // FIXME: delay these things a bit, maybe randomly 30 - 60 sec?
+
+        if (!tangles || !tangles.fusion) return
+        const rootId = tangles.fusion.root
+
+        if (consented && Object.keys(consented).length > 0) {
+          crut.read(rootId, (err, fusionData) => {
+            const isMember = fusionData.states.some(s => s.members.includes(ssb.id))
+            if (isMember) {
+              // get keys
+              const secretKey = ssb.box2.getGroupKey(fusionData.id)
+              const keys = { private: secretKey.toString('hex'), id: fusionData.id }
+              entrust(ssb, rootId, keys, msgValue.author, (err, msg2) => {
+                // FIXME: use debug() here
+              })
+            }
+          })
+        }
+      } else if (type === 'fusion/entrust') {
+        if (msgValue.author === ssb.id) return // skip self created
+
+        const { recps, secretKey, fusionRoot } = msgValue.content
+        ssb.box2.addGroupKey(recps[0], Buffer.from(secretKey, 'hex'))
+
+        crut.read(fusionRoot, (err, fusionData) => {
+          const isInvited = fusionData.states.some(s => s.invited.includes(ssb.id))
+          const isMember = fusionData.states.some(s => s.members.includes(ssb.id))
+
+          if (isInvited && !isMember) {
+            // FIXME: this probably needs a proof of key
+            crut.update(fusionRoot, { members: { add: [ssb.id] } }, (err) => {
+              // FIXME: use debug() here
+            })
+          }
+        })
+      }
+    }
+
+    // automatic actions based on messages
+    ssb.db.post(msg => {
+      if (typeof msg.value.content === 'string') {
+        // try and decrypt
+        ssb.db.get(msg.key, (err, msgValue) => {
+          if (err) return
+          runAutomaticActions(msgValue)
+        })
+      } else
+        runAutomaticActions(msg.value)
+    })
 
     return {
       create(cb) {

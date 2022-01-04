@@ -96,8 +96,30 @@ test('invite + consent', (t) => {
                   t.equal(bobState.members.length, 1, '1 member')
                   t.equal(bobState.consented.length, 1, '1 consented')
 
-                  bob.close()
-                  alice.close(t.end)
+                  TestBot.replicate({ from: bob, to: alice }, (err) => {
+
+                    // alice should now post a entrust, this takes a little while
+                    setTimeout(() => {
+                      TestBot.replicate({ from: alice, to: bob }, (err) => {
+                        // bob should now add to members (proof of key)
+
+                        // bob should now post a proof of key, this takes a little while
+                        setTimeout(() => {
+                          bobFusion.read(fusionData, (err, state) => {
+                            const bobState = state.states[0]
+
+                            t.equal(bobState.invited.length, 1, '1 invited')
+                            // note members are with proof-of-key
+                            t.equal(bobState.members.length, 2, '2 members')
+                            t.equal(bobState.consented.length, 1, '1 consented')
+
+                            bob.close()
+                            alice.close(t.end)
+                          })
+                        }, 500)
+                      })
+                    }, 500)
+                  })
                 })
               })
             })

@@ -20,17 +20,18 @@ Methods:
  - [] RemoveAttest(attestId, reason, cb)
 
 Automatic (run on post and on startup):
- - [] Load keys on boot
- - [] Proof of key
+ - [!] Load keys on boot
+ - [!] Proof of key
    - trigger: entrust (private)
    - add self to members
- - [] Entrust
+ - [!] Entrust
    - trigger: consent
    - send key to consented
 
 To discuss:
  - Update spec to use box2 and group slot for private messages?
  - Update spec to use crut message format?
+   - should we add a subtype to make it easier to deduce the step?
  - Multiple entrusts? Delay, who sends first?
  - Triggered needs state, general for crut?
  - db2 box2?
