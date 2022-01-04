@@ -4,6 +4,7 @@ const redirectSpec = require('./specs/redirect')
 const attestSpec = require('./specs/attestation')
 const SSBURI = require('ssb-uri2')
 const ssbKeys = require('ssb-keys')
+const ssbKeysU = require('ssb-keys/util')
 
 const { where, and, slowEqual, type, toCallback } = require('ssb-db2/operators')
 
@@ -20,12 +21,12 @@ function getFusionKey() {
   return keys
 }
 
-function entrust(ssb, rootId, keys, recipient, cb) {
+function entrust(ssb, rootId, fusionId, secretKey, recipient, cb) {
   ssb.db.publish({
     type: 'fusion/entrust',
-    secretKey: keys.private, // FIXME: also not correct here
+    secretKey: secretKey.toString('hex'),
     fusionRoot: rootId,
-    recps: [keys.id, recipient] // fusionId in first slot
+    recps: [fusionId, recipient]
   }, cb)
 }
 
@@ -41,7 +42,7 @@ function allFusions(ssb, crut, cb) {
       if (err) return cb(err)
 
       Promise.all(identityRoots.map(root => crut.read(root.key)))
-        .then((identities) => { cb(null, identities) })
+        .then(identities => cb(null, identities))
     })
   )
 }
@@ -87,8 +88,7 @@ module.exports = {
             if (isMember) {
               // get keys
               const secretKey = ssb.box2.getGroupKey(fusionData.id)
-              const keys = { private: secretKey.toString('hex'), id: fusionData.id }
-              entrust(ssb, rootId, keys, msgValue.author, (err, msg2) => {
+              entrust(ssb, rootId, fusionData.id, secretKey, msgValue.author, (err, msg2) => {
                 // FIXME: use debug() here
               })
             }
@@ -135,10 +135,11 @@ module.exports = {
 
           const { data } = SSBURI.decompose(keys.id)
 
-          // FIXME: Buffer.from is not correct!
-          ssb.box2.addGroupKey(keys.id, Buffer.from(keys.private, 'hex'))
+          const secretKey = ssbKeysU.toBuffer(keys.private)
 
-          entrust(ssb, rootId, keys, ssb.id, (err) => {
+          ssb.box2.addGroupKey(keys.id, secretKey)
+
+          entrust(ssb, rootId, keys.id, secretKey, ssb.id, (err) => {
             if (err) return cb(err)
             else return cb(null, {
               keys,

@@ -35,6 +35,8 @@ To discuss:
    - should we add a subtype to make it easier to deduce the step?
  - Multiple entrusts? Delay, who sends first?
  - Triggered needs state, general for crut?
+ - Authenticated redirects? Maybe as extension?
+   https://ssb-ngi-pointer.github.io/Audit%20Report_%20Secure%20Scuttlebutt%20Partial%20Replication%20and%20Fusion%20Identity.html#Suggestion-A-Explore-Protocol-Extension-for-Authentication-for-Redirects
  - db2 box2?
    - should this be any?
      https://github.com/ssb-ngi-pointer/ssb-db2/blob/da776b23ae888a280b9cb30dc4e4262b55de052a/db.js#L319
