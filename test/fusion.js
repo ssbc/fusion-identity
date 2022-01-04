@@ -159,6 +159,38 @@ test('tombstone', (t) => {
   })
 })
 
+test('redirect & attest', (t) => {
+  const alice = createServer()
+
+  const fusion = Fusion.init(alice)
+
+  fusion.create((err, oldFusionData) => {
+    t.error(err, 'no err for create()')
+
+    fusion.tombstone(oldFusionData, 'bye', (err) => {
+      t.error(err, 'no err for tombstone()')
+
+      fusion.create((err, newFusionData) => {
+        t.error(err, 'no err for create()')
+
+        fusion.redirect(oldFusionData.id, newFusionData.id, (err, redirectId) => {
+          t.error(err, 'no err for redirect()')
+
+          fusion.attest(redirectId, 'confirm', 'testing attestation', (err, attestId) => {
+            t.error(err, 'no err for attest()')
+
+            fusion.removeAttestation(attestId, 'testing removing attestation', (err) => {
+              t.error(err, 'no err for remove attestation()')
+
+              alice.close(t.end)
+            })
+          })
+        })
+      })
+    })
+  })
+})
+
 test('keys loaded on startup', (t) => {
   const keys = ssbKeys.generate()
   let alice = createServer('alice', keys)

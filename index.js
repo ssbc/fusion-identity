@@ -1,5 +1,7 @@
 const Crut = require('ssb-crut')
 const fusionSpec = require('./specs/fusion')
+const redirectSpec = require('./specs/redirect')
+const attestSpec = require('./specs/attestation')
 const SSBURI = require('ssb-uri2')
 const ssbKeys = require('ssb-keys')
 
@@ -65,6 +67,8 @@ module.exports = {
     )
 
     const crut = new Crut(ssb, fusionSpec)
+    const redirectCrut = new Crut(ssb, redirectSpec)
+    const attestCrut = new Crut(ssb, attestSpec)
 
     function runAutomaticActions(msgValue) {
       const { type, consented, tangles } = msgValue.content
@@ -156,6 +160,20 @@ module.exports = {
 
       tombstone(fusion, reason, cb) {
         crut.tombstone(fusion.rootId, { reason }, cb)
+      },
+
+      // redirect
+
+      redirect(oldFusionId, newFusionId, cb) {
+        redirectCrut.create({ old: oldFusionId, new: newFusionId }, cb)
+      },
+
+      attest(redirectId, position, reason, cb) {
+        attestCrut.create({ target: redirectId, position, reason }, cb)
+      },
+
+      removeAttestation(attestationId, reason, cb) {
+        attestCrut.tombstone(attestationId, { reason }, cb)
       },
 
       // all fusions
