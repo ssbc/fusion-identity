@@ -45,7 +45,7 @@ test('create fusion identity', (t) => {
     alice.db.query(
       toCallback((err, messages) => {
         t.equal(messages.length, 2, '2 messages created')
-        t.equal(messages[0].value.content.type, 'fusion')
+        t.equal(messages[0].value.content.type, 'fusion', 'correct type')
         t.equal(messages[1].value.content.recps.length, 2, '2 recipients')
         t.equal(messages[1].meta.private, true, 'secret is encrypted')
         alice.close(t.end)
@@ -88,7 +88,7 @@ test('invite + consent', (t) => {
 
               bobFusion.invitations((err, invited) => {
                 t.error(err, 'no err for invitations()')
-                t.equal(invited.length, 0, '0 open invitation')
+                t.equal(invited.length, 0, 'no open invitations')
 
                 bobFusion.read(fusionData, (err, state) => {
                   const bobState = state.states[0]
