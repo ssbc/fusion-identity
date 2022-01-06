@@ -3,11 +3,7 @@ module.exports = {
   tangle: 'redirect',
 
   staticProps: {
-    old: {
-      type: 'string', // FIXME: regex
-    },
-    new: {
-      type: 'string', // FIXME: regex
-    }
+    old: { $ref: '#/definitions/messageId', required: true },
+    new: { $ref: '#/definitions/messageId', required: true }
   },
 }

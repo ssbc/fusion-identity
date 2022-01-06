@@ -5,9 +5,7 @@ module.exports = {
   tangle: 'attestation',
 
   staticProps: {
-    target: {
-      type: 'string', // FIXME: regex
-    }
+    target: { $ref: '#/definitions/messageId', required: true }
   },
 
   props: {

@@ -9,16 +9,8 @@ module.exports = {
     }
   },
 
-  // ENCODING
-  //    members: { FeedId: 1 }
-  //
-  // this is the raw Transformation which allows for
-  // easy collision-free concatenation:
-  //
-  //   - multiple additions just mean a bigger positive number
-  //   - negative numbers remove (if it reduces the count to <= 0)
   props: {
-    invited: SimpleSet(),    // can add regex validation for type FeedId
+    invited: SimpleSet(),
     consented: SimpleSet(),
     members: SimpleSet(),
   },
