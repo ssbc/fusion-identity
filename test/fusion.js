@@ -4,35 +4,7 @@ const ssbKeys = require('ssb-keys')
 const Fusion = require('../')
 const { toCallback } = require('ssb-db2/operators')
 
-const createServer = (name, keys, startUnclean = false) => {
-  const stack = TestBot
-        .use(require('ssb-db2/compat/db'))
-        .use(require('ssb-db2/compat/history-stream'))
-        .use(require('ssb-db2/compat/feedstate'))
-        .use(require('ssb-db2-box2'))
-
-  const opts = {
-    db2: true,
-    box2: {
-      alwaysbox2: true
-    }
-  }
-
-  if (name && keys) {
-    opts.name = name
-    opts.keys = keys
-    opts.startUnclean = startUnclean
-  }
-
-  const ssb = stack(opts)
-
-  const dm_hex = '4e2ce5ca70cd12cc0cee0a5285b61fbc3b5f4042287858e613f9a8bf98a70d39'
-  ssb.box2.addOwnDMKey(Buffer.from(dm_hex, 'hex'))
-
-  ssb.box2.setReady()
-
-  return ssb
-}
+const { createServer } = require('./helpers')
 
 test('create fusion identity', (t) => {
   const alice = createServer()
@@ -154,38 +126,6 @@ test('tombstone', (t) => {
             t.equal(fusions.length, 1, '1 tombstoned fusions')
 
             alice.close(t.end)
-          })
-        })
-      })
-    })
-  })
-})
-
-test('redirect & attest', (t) => {
-  const alice = createServer()
-
-  const fusion = Fusion.init(alice)
-
-  fusion.create((err, oldFusionData) => {
-    t.error(err, 'no err for create()')
-
-    fusion.tombstone(oldFusionData, 'bye', (err) => {
-      t.error(err, 'no err for tombstone()')
-
-      fusion.create((err, newFusionData) => {
-        t.error(err, 'no err for create()')
-
-        fusion.redirect(oldFusionData.id, newFusionData.id, (err, redirectId) => {
-          t.error(err, 'no err for redirect()')
-
-          fusion.attest(redirectId, 'confirm', 'testing attestation', (err, attestId) => {
-            t.error(err, 'no err for attest()')
-
-            fusion.removeAttestation(attestId, 'testing removing attestation', (err) => {
-              t.error(err, 'no err for remove attestation()')
-
-              alice.close(t.end)
-            })
           })
         })
       })

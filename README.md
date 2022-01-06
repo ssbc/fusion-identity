@@ -16,9 +16,9 @@ Methods:
  - [!] Tombstoned(cb)
  - [!] Read(fusionId, cb)
  - [!] Redirect(oldFusionId, newFusionId, cb)
+ - [!] Redirects
  - [!] Attest(redirectId, reason, cb)
- - [!] RemoveAttest(attestId, reason, cb)
- - [] Redirects (incl. attestations)
+ - [!] Attestations
 
 Automatic (run on post and on startup):
  - [!] Load keys on boot

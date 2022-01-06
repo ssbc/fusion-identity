@@ -1,6 +1,6 @@
 module.exports = {
   type: 'fusion/redirect',
-  tangle: 'rediret',
+  tangle: 'redirect',
 
   staticProps: {
     old: {

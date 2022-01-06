@@ -47,6 +47,14 @@ function allFusions(ssb, crut, cb) {
   )
 }
 
+function notTombstoned(list) {
+  return list.filter(x => !x.states.some(s => s.tombstone))
+}
+
+function tombstoned(list) {
+  return list.filter(x => x.states.some(s => s.tombstone))
+}
+
 module.exports = {
   init(ssb) {
     if (!ssb.box2) throw new Error('fusion identity needs ssb-db2-box2')
@@ -167,16 +175,67 @@ module.exports = {
 
       // redirect
 
-      redirect(oldFusionId, newFusionId, cb) {
-        redirectCrut.create({ old: oldFusionId, new: newFusionId }, cb)
+      redirect: {
+        create(oldFusionId, newFusionId, cb) {
+          redirectCrut.create({ old: oldFusionId, new: newFusionId }, cb)
+        },
+
+        tombstone(redirectId, reason, cb) {
+          redirectCrut.tombstone(redirectId, { reason }, cb)
+        }
       },
 
-      attest(redirectId, position, reason, cb) {
-        attestCrut.create({ target: redirectId, position, reason }, cb)
+      redirects(cb) {
+        ssb.db.query(
+          where(
+            and(
+              slowEqual('value.content.tangles.redirect.root', null),
+              type('fusion/redirect')
+            )
+          ),
+          toCallback((err, roots) => {
+            if (err) return cb(err)
+
+            Promise.all(roots.map(root => redirectCrut.read(root.key)))
+              .then(redirects => cb(null, notTombstoned(redirects)))
+          })
+        )
       },
 
-      removeAttestation(attestationId, reason, cb) {
-        attestCrut.tombstone(attestationId, { reason }, cb)
+      attest: {
+        create(redirectId, position, reason, cb) {
+          attestCrut.create({ target: redirectId, position, reason }, cb)
+        },
+
+        update(attestationId, position, reason, cb) {
+          attestCrut.update(attestationId, { position, reason }, cb)
+        },
+
+        read(attestationId, cb) {
+          attestCrut.read(attestationId, cb)
+        },
+
+        tombstone(attestationId, reason, cb) {
+          attestCrut.tombstone(attestationId, { reason }, cb)
+        }
+      },
+
+      attestations(redirectId, cb) {
+        ssb.db.query(
+          where(
+            and(
+              slowEqual('value.content.target', redirectId),
+              slowEqual('value.content.tangles.attestation.root', null),
+              type('fusion/attestation')
+            )
+          ),
+          toCallback((err, roots) => {
+            if (err) return cb(err)
+
+            Promise.all(roots.map(root => attestCrut.read(root.key)))
+              .then(attestations => cb(null, notTombstoned(attestations)))
+          })
+        )
       },
 
       // all fusions
@@ -196,7 +255,7 @@ module.exports = {
         allFusions(ssb, crut, (err, identities) => {
           if (err) return cb(err)
 
-          cb(null, identities.filter(x => !x.states.some(s => s.tombstone)))
+          cb(null, notTombstoned(identities))
         })
       },
 
@@ -204,7 +263,7 @@ module.exports = {
         allFusions(ssb, crut, (err, identities) => {
           if (err) return cb(err)
 
-          cb(null, identities.filter(x => x.states.some(s => s.tombstone)))
+          cb(null, tombstoned(identities))
         })
       }
     }
