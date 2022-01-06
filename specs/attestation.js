@@ -20,6 +20,13 @@ module.exports = {
       if (!position || (position.set !== 'confirm' && position.set !== 'reject'))
         return false
 
+    if (graph) { // only for updates
+      const rootKey = graph.rootKeys[0]
+      const rootMsg = graph.nodes.find(x => x.key === rootKey)
+      if (rootMsg && rootMsg.value.author !== msg.value.author)
+        return false
+    }
+
     return true
   }
 }

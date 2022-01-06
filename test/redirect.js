@@ -1,18 +1,14 @@
 const test = require('tape')
+const TestBot = require('scuttle-testbot')
 const Fusion = require('../')
 const { createServer } = require('./helpers')
 
 test('redirect & attest', (t) => {
   const alice = createServer()
+  const bob = createServer()
 
-  /*
-  alice.db.post(msg => {
-    if (msg.value.content.type === 'fusion/redirect')
-      console.log(JSON.stringify(msg, null, 2))
-  })
-  */
-  
   const fusion = Fusion.init(alice)
+  const fusionBob = Fusion.init(bob)
 
   fusion.create((err, oldFusionData) => {
     t.error(err, 'no err for create()')
@@ -32,26 +28,42 @@ test('redirect & attest', (t) => {
             fusion.attest.update(attestationId, 'reject', 'nope', (err) => {
               t.error(err, 'no err for attest.update()')
 
-              fusion.attest.read(attestationId, (err, attest) => {
-                t.error(err, 'no err for attest.read()')
+              TestBot.replicate({ from: alice, to: bob }, (err) => {
 
-                t.equal(attest.states[0].position, 'reject', 'correct position')
+                fusionBob.redirect.tombstone(redirectId, 'hax', (err) => {
+                  t.equal(err.message,
+                          'Invalid update message, failed isValidNextStep, publish aborted',
+                          'only author can change redirect')
 
-                fusion.redirects((err, redirects) => {
+                  fusionBob.attest.update(attestationId, 'reject', 'nope', (err) => {
+                    t.equal(err.message,
+                            'Invalid update message, failed isValidNextStep, publish aborted',
+                            'only author can change attestation')
 
-                  t.equal(redirects[0].old, oldFusionData.rootId, 'correct old')
-                  t.equal(redirects[0].new, newFusionData.rootId, 'correct new')
+                    fusion.attest.read(attestationId, (err, attest) => {
+                      t.error(err, 'no err for attest.read()')
 
-                  fusion.attestations(redirectId, (err, attestations) => {
-                    t.equal(attestations.length, 1, '1 attestation')
+                      t.equal(attest.states[0].position, 'reject', 'correct position')
 
-                    fusion.attest.tombstone(attestationId, 'testing removing attestation', (err) => {
-                      t.error(err, 'no err for attest.tombstone()')
+                      fusion.redirects((err, redirects) => {
 
-                      fusion.attestations(redirectId, (err, attestations) => {
-                        t.equal(attestations.length, 0, '0 attestations')
+                        t.equal(redirects[0].old, oldFusionData.rootId, 'correct old')
+                        t.equal(redirects[0].new, newFusionData.rootId, 'correct new')
 
-                        alice.close(t.end)
+                        fusion.attestations(redirectId, (err, attestations) => {
+                          t.equal(attestations.length, 1, '1 attestation')
+
+                          fusion.attest.tombstone(attestationId, 'testing removing attestation', (err) => {
+                            t.error(err, 'no err for attest.tombstone()')
+
+                            fusion.attestations(redirectId, (err, attestations) => {
+                              t.equal(attestations.length, 0, '0 attestations')
+
+                              bob.close()
+                              alice.close(t.end)
+                            })
+                          })
+                        })
                       })
                     })
                   })
