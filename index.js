@@ -34,6 +34,7 @@ function allFusions(ssb, crut, cb) {
   ssb.db.query(
     where(
       and(
+        // FIXME: remove this once we have proper types
         slowEqual('value.content.tangles.fusion.root', null),
         type('fusion')
       )
@@ -190,6 +191,7 @@ module.exports = {
         ssb.db.query(
           where(
             and(
+              // FIXME: remove this once we have proper types
               slowEqual('value.content.tangles.redirect.root', null),
               type('fusion/redirect')
             )
@@ -226,6 +228,7 @@ module.exports = {
           where(
             and(
               slowEqual('value.content.target', redirectId),
+              // FIXME: remove this once we have proper types
               slowEqual('value.content.tangles.attestation.root', null),
               type('fusion/attestation')
             )

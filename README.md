@@ -28,9 +28,3 @@ Automatic (run on post and on startup):
  - [!] Entrust
    - trigger: consent
    - send key to consented
-
------
-
-Do we even need this now?
- - Fix slowEqual in crut: https://gitlab.com/ahau/lib/ssb-crut/-/merge_requests/13
-
