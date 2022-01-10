@@ -85,7 +85,8 @@ module.exports = {
       const { type, consented, tangles } = msgValue.content
 
       if (type === 'fusion') {
-        // FIXME: delay these things a bit, maybe randomly 30 - 60 sec?
+        // note this can result in multiple entrust but for now that
+        // is okay, as the groups are small
 
         if (!tangles || !tangles.fusion) return
         const rootId = tangles.fusion.root
