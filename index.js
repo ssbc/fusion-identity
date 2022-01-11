@@ -1,7 +1,5 @@
 const Crut = require('ssb-crut')
 const fusionSpec = require('./specs/fusion')
-const redirectSpec = require('./specs/redirect')
-const attestSpec = require('./specs/attestation')
 const SSBURI = require('ssb-uri2')
 const ssbKeys = require('ssb-keys')
 const ssbKeysU = require('ssb-keys/util')
@@ -12,10 +10,8 @@ function getFusionKey() {
   const keys = ssbKeys.generate()
 
   const classicUri = SSBURI.fromFeedSigil(keys.id)
-  const { /*type, format, */ data } = SSBURI.decompose(classicUri)
-  const fusionUri = SSBURI.compose({
-    type: 'identity', format: 'fusion', data
-  })
+  const { data } = SSBURI.decompose(classicUri)
+  const fusionUri = SSBURI.compose({ type: 'identity', format: 'fusion', data })
   keys.id = fusionUri
 
   return keys
@@ -30,6 +26,7 @@ function entrust(ssb, rootId, fusionId, secretKey, recipient, cb) {
   }, cb)
 }
 
+// FIXME: return a stream
 function allFusions(ssb, crut, cb) {
   ssb.db.query(
     where(
@@ -79,8 +76,6 @@ module.exports = {
     )
 
     const crut = new Crut(ssb, fusionSpec)
-    const redirectCrut = new Crut(ssb, redirectSpec)
-    const attestCrut = new Crut(ssb, attestSpec)
 
     function runAutomaticActions(msgValue) {
       const { type, consented, tangles } = msgValue.content
@@ -127,7 +122,7 @@ module.exports = {
     // automatic actions based on messages
     ssb.db.post(msg => {
       if (typeof msg.value.content === 'string') {
-        // try and decrypt
+        // try to decrypt, FIXME: this is a bit silly
         ssb.db.get(msg.key, (err, msgValue) => {
           if (err) return
           runAutomaticActions(msgValue)
@@ -174,75 +169,6 @@ module.exports = {
       tombstone(fusion, reason, cb) {
         crut.tombstone(fusion.rootId, { reason }, cb)
       },
-
-      // redirect
-
-      redirect: {
-        create(oldFusionId, newFusionId, cb) {
-          redirectCrut.create({ old: oldFusionId, new: newFusionId }, cb)
-        },
-
-        tombstone(redirectId, reason, cb) {
-          redirectCrut.tombstone(redirectId, { reason }, cb)
-        }
-      },
-
-      redirects(cb) {
-        ssb.db.query(
-          where(
-            and(
-              // FIXME: remove this once we have proper types
-              slowEqual('value.content.tangles.redirect.root', null),
-              type('fusion/redirect')
-            )
-          ),
-          toCallback((err, roots) => {
-            if (err) return cb(err)
-
-            Promise.all(roots.map(root => redirectCrut.read(root.key)))
-              .then(redirects => cb(null, notTombstoned(redirects)))
-          })
-        )
-      },
-
-      attest: {
-        create(redirectId, position, reason, cb) {
-          attestCrut.create({ target: redirectId, position, reason }, cb)
-        },
-
-        update(attestationId, position, reason, cb) {
-          attestCrut.update(attestationId, { position, reason }, cb)
-        },
-
-        read(attestationId, cb) {
-          attestCrut.read(attestationId, cb)
-        },
-
-        tombstone(attestationId, reason, cb) {
-          attestCrut.tombstone(attestationId, { reason }, cb)
-        }
-      },
-
-      attestations(redirectId, cb) {
-        ssb.db.query(
-          where(
-            and(
-              slowEqual('value.content.target', redirectId),
-              // FIXME: remove this once we have proper types
-              slowEqual('value.content.tangles.attestation.root', null),
-              type('fusion/attestation')
-            )
-          ),
-          toCallback((err, roots) => {
-            if (err) return cb(err)
-
-            Promise.all(roots.map(root => attestCrut.read(root.key)))
-              .then(attestations => cb(null, notTombstoned(attestations)))
-          })
-        )
-      },
-
-      // all fusions
 
       invitations(cb) {
         allFusions(ssb, crut, (err, identities) => {
