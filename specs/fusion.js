@@ -1,4 +1,6 @@
+const ssbKeys = require('ssb-keys')
 const SimpleSet = require('@tangle/simple-set')
+const Overwrite = require('@tangle/overwrite')
 
 module.exports = {
   type: 'fusion',
@@ -13,49 +15,65 @@ module.exports = {
     invited: SimpleSet(),
     consented: SimpleSet(),
     members: SimpleSet(),
+    // FIXME: https://gitlab.com/ahau/lib/ssb-crut/-/issues/3
+    proofOfKey: Overwrite()
   },
 
-  isValidNextStep ({ accT, graph }, msg) {
+  isValidNextStep ({ accT, graph, server }, msg) {
     // accT = accumulated Transformation so far
     // msg = message containing transformation about to be applied
 
     // members are different from consented because the creator is
     // automatically a member
 
-    const { invited, consented, members } = msg.value.content
+    const { author } = msg.value
+    const { invited, consented, members, proofOfKey } = msg.value.content
     
     /* Validate INIT */
 
     if (Object.keys(accT.members).length === 0) {
       if (!members) return false // you must add an initial member
 
-      return members[msg.value.author] === 1 // initial member must be you
+      return members[author] === 1 // initial member must be you
     }
 
     /* Validate UPDATE */
 
     const canUpdate = (
-      accT.members[msg.value.author] ||
-      accT.consented[msg.value.author] ||
-      accT.invited[msg.value.author]
+      accT.members[author] ||
+      accT.consented[author] ||
+      accT.invited[author]
     )
     if (!canUpdate) return false
 
     if (consented) {
-      const isOk = Object.keys(consented).length === 1 &&
-            consented[msg.value.author] === 1 && 
-            accT.invited[msg.value.author] === 1
-
-      return isOk
+      return Object.keys(consented).length === 1 &&
+             consented[author] === 1 && 
+             accT.invited[author] === 1
     }
 
-    // are you a member on consent or on proof-of-key and this should
-    // be implicit?
     if (members) {
-      const ok = Object.keys(members).every(member => accT.consented[member])
       // every member being added must already be in "consented"
+      const ok = Object.keys(members).every(member => accT.consented[member])
 
       if (!ok) return false
+
+      // FIXME: https://gitlab.com/ahau/lib/ssb-crut/-/issues/4
+
+      return true
+
+      const fusionId = graph.nodes[0].value.content.id
+      const secretKey = server.box2.getGroupKey(fusionId)
+
+      const consentId = graph.nodes.find(x => x.value.author === author && x.value.content.consented).key
+
+      const proofStr = consentId + 'fusion/proof-of-key'
+      const privateKeyStr = secretKey.toString('base64') + ".ed25519"
+      const reproduced = ssbKeys.sign(privateKeyStr, proofStr)
+
+      const correctProof = proofOfKey.set === reproduced
+
+      return correctProof
     }
     
     return true

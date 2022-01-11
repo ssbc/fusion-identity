@@ -17,11 +17,12 @@ function getFusionKey() {
   return keys
 }
 
-function entrust(ssb, rootId, fusionId, secretKey, recipient, cb) {
+function entrust(ssb, rootId, consentId, fusionId, secretKey, recipient, cb) {
   ssb.db.publish({
     type: 'fusion/entrust',
-    secretKey: secretKey.toString('hex'),
-    fusionRoot: rootId,
+    secretKey: secretKey.toString('base64'),
+    rootId,
+    consentId,
     recps: [fusionId, recipient]
   }, cb)
 }
@@ -68,7 +69,7 @@ module.exports = {
         msgs.forEach(msg => {
           const { recps, secretKey } = msg.value.content
           // FIXME: validate keys (recps[0] must match secretKey)
-          ssb.box2.addGroupKey(recps[0], Buffer.from(secretKey, 'hex'))
+          ssb.box2.addGroupKey(recps[0], Buffer.from(secretKey, 'base64'))
         })
 
         ssb.box2.registerIsGroup(recp => recp.startsWith('ssb:identity/fusion/'))
@@ -77,14 +78,15 @@ module.exports = {
 
     const crut = new Crut(ssb, fusionSpec)
 
-    function runAutomaticActions(msgValue) {
-      const { type, consented, tangles } = msgValue.content
+    function runAutomaticActions(msg) {
+      const { type, consented, tangles } = msg.value.content
 
       if (type === 'fusion') {
+        if (!tangles?.fusion) return
+
         // note this can result in multiple entrust but for now that
         // is okay, as the groups are small
 
-        if (!tangles || !tangles.fusion) return
         const rootId = tangles.fusion.root
 
         if (consented && Object.keys(consented).length > 0) {
@@ -93,25 +95,32 @@ module.exports = {
             if (isMember) {
               // get keys
               const secretKey = ssb.box2.getGroupKey(fusionData.id)
-              entrust(ssb, rootId, fusionData.id, secretKey, msgValue.author, (err, msg2) => {
+              entrust(ssb, rootId, msg.key, fusionData.id, secretKey, msg.value.author, (err) => {
+                if (err) console.error('failed to entrust', err)
+
                 // FIXME: use debug() here
               })
             }
           })
         }
       } else if (type === 'fusion/entrust') {
-        if (msgValue.author === ssb.id) return // skip self created
+        if (msg.value.author === ssb.id) return // skip self created
 
-        const { recps, secretKey, fusionRoot } = msgValue.content
-        ssb.box2.addGroupKey(recps[0], Buffer.from(secretKey, 'hex'))
+        const { recps, secretKey, rootId, consentId } = msg.value.content
+        const privateKey = Buffer.from(secretKey, 'base64')
+        ssb.box2.addGroupKey(recps[0], privateKey)
 
-        crut.read(fusionRoot, (err, fusionData) => {
+        crut.read(rootId, (err, fusionData) => {
           const isInvited = fusionData.states.some(s => s.invited.includes(ssb.id))
           const isMember = fusionData.states.some(s => s.members.includes(ssb.id))
 
           if (isInvited && !isMember) {
-            // FIXME: this probably needs a proof of key
-            crut.update(fusionRoot, { members: { add: [ssb.id] } }, (err) => {
+            const proofStr = consentId + 'fusion/proof-of-key'
+            const privateKeyStr = secretKey + ".ed25519"
+            const data = { members: { add: [ssb.id] }, proofOfKey: ssbKeys.sign(privateKeyStr, proofStr) }
+            crut.update(rootId, data, (err) => {
+              if (err) console.error('failed to write proof-of-key', err)
+
               // FIXME: use debug() here
             })
           }
@@ -125,10 +134,10 @@ module.exports = {
         // try to decrypt, FIXME: this is a bit silly
         ssb.db.get(msg.key, (err, msgValue) => {
           if (err) return
-          runAutomaticActions(msgValue)
+          runAutomaticActions({ key: msg.key, value: msgValue })
         })
       } else
-        runAutomaticActions(msg.value)
+        runAutomaticActions(msg)
     })
 
     return {
@@ -144,7 +153,7 @@ module.exports = {
 
           ssb.box2.addGroupKey(keys.id, secretKey)
 
-          entrust(ssb, rootId, keys.id, secretKey, ssb.id, (err) => {
+          entrust(ssb, rootId, undefined, keys.id, secretKey, ssb.id, (err) => {
             if (err) return cb(err)
             else return cb(null, {
               keys,
