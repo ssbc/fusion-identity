@@ -75,6 +75,12 @@ module.exports = {
 
       return correctProof
     }
+
+    /* Validate TOMBSTONE */
+
+    if (msg.value.content.tombstone) {
+      return accT.members[author]
+    }
     
     return true
   }

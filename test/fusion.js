@@ -106,8 +106,10 @@ test('invite + consent', (t) => {
 
 test('tombstone', (t) => {
   const alice = createServer()
-
   const fusion = Fusion.init(alice)
+
+  const bob = createServer()
+  const bobFusion = Fusion.init(bob)
 
   fusion.create((err, fusionData) => {
     t.error(err, 'no err for create()')
@@ -116,16 +118,25 @@ test('tombstone', (t) => {
       t.error(err, 'no err for all()')
       t.equal(fusions.length, 1, '1 fusion')
 
-      fusion.tombstone(fusionData, 'bye', (err) => {
-        t.error(err, 'no err for tombstone()')
+      TestBot.replicate({ from: alice, to: bob }, (err) => {
 
-        fusion.all((err, fusions) => {
-          t.equal(fusions.length, 0, '0 active fusions')
+        bobFusion.tombstone(fusionData, 'bye', (err) => {
+          t.equal(err.message, 'Invalid update message, failed isValidNextStep, publish aborted',
+                  'bob is not allowed to tombstone')
 
-          fusion.tombstoned((err, fusions) => {
-            t.equal(fusions.length, 1, '1 tombstoned fusions')
+          fusion.tombstone(fusionData, 'bye', (err) => {
+            t.error(err, 'no err for tombstone()')
 
-            alice.close(t.end)
+            fusion.all((err, fusions) => {
+              t.equal(fusions.length, 0, '0 active fusions')
+
+              fusion.tombstoned((err, fusions) => {
+                t.equal(fusions.length, 1, '1 tombstoned fusions')
+
+                bob.close()
+                alice.close(t.end)
+              })
+            })
           })
         })
       })
