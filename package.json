@@ -16,6 +16,7 @@
   "dependencies": {
     "@tangle/simple-set": "^2.1.0",
     "ssb-crut": "^3.2.1",
+    "ssb-crut-authors": "^2.0.4",
     "ssb-db2-box2": "^0.6.0",
     "ssb-uri2": "^1.6.0"
   },

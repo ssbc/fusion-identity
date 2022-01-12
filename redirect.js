@@ -1,4 +1,4 @@
-const Crut = require('ssb-crut')
+const Crut = require('ssb-crut-authors')
 const redirectSpec = require('./specs/redirect')
 const attestSpec = require('./specs/attestation')
 
@@ -16,7 +16,7 @@ module.exports = {
     return {
       redirect: {
         create(oldFusionId, newFusionId, cb) {
-          redirectCrut.create({ old: oldFusionId, new: newFusionId }, cb)
+          redirectCrut.create({ old: oldFusionId, new: newFusionId, authors: { add: [ssb.id] } }, cb)
         },
 
         tombstone(redirectId, reason, cb) {
@@ -45,7 +45,7 @@ module.exports = {
 
       attest: {
         create(redirectId, position, reason, cb) {
-          attestCrut.create({ target: redirectId, position, reason }, cb)
+          attestCrut.create({ target: redirectId, position, reason, authors: { add: [ssb.id] } }, cb)
         },
 
         update(attestationId, position, reason, cb) {

@@ -7,6 +7,9 @@ module.exports = {
     new: { $ref: '#/definitions/messageId', required: true }
   },
 
+  props: {},
+
+  /*
   isValidNextStep ({ accT, graph }, msg) {
     if (graph) { // only for updates
       const rootKey = graph.rootKeys[0]
@@ -17,4 +20,5 @@ module.exports = {
 
     return true
   }
+  */
 }
