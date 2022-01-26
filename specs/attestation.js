@@ -13,8 +13,8 @@ module.exports = {
     reason: Overwrite() // optional
   },
 
-  isValidNextStep ({ accT, graph }, msg) {
-    const { position, reason, tombstone } = msg.value.content
+  isValidNextStep ({ tips, graph }, node) {
+    const { position, reason, tombstone } = node.data
 
     if (!tombstone)
       if (!position || (position.set !== 'confirm' && position.set !== 'reject'))
@@ -22,8 +22,8 @@ module.exports = {
 
     if (graph) { // only for updates
       const rootKey = graph.rootKeys[0]
-      const rootMsg = graph.nodes.find(x => x.key === rootKey)
-      if (rootMsg && rootMsg.value.author !== msg.value.author)
+      const rootNode = graph.nodes.find(x => x.key === rootKey)
+      if (rootNode && rootNode.author !== node.author)
         return false
     }
 

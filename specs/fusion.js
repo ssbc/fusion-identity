@@ -19,69 +19,71 @@ module.exports = {
     proofOfKey: Overwrite()
   },
 
-  isValidNextStep ({ accT, graph, server }, msg) {
-    // accT = accumulated Transformation so far
-    // msg = message containing transformation about to be applied
-
+  isValidNextStep ({ tips, graph }, node) {
     // members are different from consented because the creator is
     // automatically a member
 
-    const { author } = msg.value
-    const { invited, consented, members, proofOfKey } = msg.value.content
-    
-    /* Validate INIT */
+    const { author } = node
+    const { invited, consented, members, proofOfKey } = node.data
 
-    if (Object.keys(accT.members).length === 0) {
-      if (!members) return false // you must add an initial member
+    return tips.every(tipObj => {
+      const tip = tipObj.T
+      /* Validate INIT */
 
-      return members[author] === 1 // initial member must be you
-    }
+      if (Object.keys(tip.members).length === 0) {
+        if (!members) return false // you must add an initial member
 
-    /* Validate UPDATE */
+        // FIXME: should check if already exists
 
-    const canUpdate = (
-      accT.members[author] ||
-      accT.consented[author] ||
-      accT.invited[author]
-    )
-    if (!canUpdate) return false
+        return members[author] === 1 // initial member must be you
+      }
 
-    if (consented) {
-      return Object.keys(consented).length === 1 &&
-             consented[author] === 1 && 
-             accT.invited[author] === 1
-    }
+      /* Validate UPDATE */
 
-    if (members) {
-      // every member being added must already be in "consented"
-      const ok = Object.keys(members).every(member => accT.consented[member])
+      const canUpdate = (
+        tip.members[author] ||
+          tip.consented[author] ||
+          tip.invited[author]
+      )
+      if (!canUpdate) return false
 
-      if (!ok) return false
+      if (consented) {
+        return Object.keys(consented).length === 1 &&
+          consented[author] === 1 && 
+          tip.invited[author] === 1
+      }
 
-      // FIXME: https://gitlab.com/ahau/lib/ssb-crut/-/issues/4
+      if (members) {
+        // every member being added must already be in "consented"
+        const ok = Object.keys(members).every(member => tip.consented[member])
 
+        if (!ok) return false
+
+        // FIXME: https://gitlab.com/ahau/lib/ssb-crut/-/issues/4
+
+        return true
+
+        const fusionId = graph.nodes[0].value.content.id
+        const secretKey = server.box2.getGroupKey(fusionId)
+
+        const consentId = graph.nodes.find(x => x.value.author === author && x.value.content.consented).key
+
+        const proofStr = consentId + 'fusion/proof-of-key'
+        const privateKeyStr = secretKey.toString('base64') + ".ed25519"
+        const reproduced = ssbKeys.sign(privateKeyStr, proofStr)
+
+        const correctProof = proofOfKey.set === reproduced
+
+        return correctProof
+      }
+
+      /* Validate TOMBSTONE */
+
+      if (node.data.tombstone) {
+        return tip.members[author]
+      }
+      
       return true
-
-      const fusionId = graph.nodes[0].value.content.id
-      const secretKey = server.box2.getGroupKey(fusionId)
-
-      const consentId = graph.nodes.find(x => x.value.author === author && x.value.content.consented).key
-
-      const proofStr = consentId + 'fusion/proof-of-key'
-      const privateKeyStr = secretKey.toString('base64') + ".ed25519"
-      const reproduced = ssbKeys.sign(privateKeyStr, proofStr)
-
-      const correctProof = proofOfKey.set === reproduced
-
-      return correctProof
-    }
-
-    /* Validate TOMBSTONE */
-
-    if (msg.value.content.tombstone) {
-      return accT.members[author]
-    }
-    
-    return true
+    })
   }
 }

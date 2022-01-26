@@ -14,8 +14,9 @@
   },
   "homepage": "https://github.com/mixmix/fusion-identity-test#readme",
   "dependencies": {
-    "@tangle/simple-set": "^2.1.0",
-    "ssb-crut": "^3.2.1",
+    "@tangle/overwrite": "^3.0.0",
+    "@tangle/simple-set": "^3.0.0",
+    "ssb-crut": "^4.0.0",
     "ssb-db2-box2": "^0.6.0",
     "ssb-uri2": "^1.6.0"
   },

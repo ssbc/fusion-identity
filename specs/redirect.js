@@ -7,11 +7,11 @@ module.exports = {
     new: { $ref: '#/definitions/messageId', required: true }
   },
 
-  isValidNextStep ({ accT, graph }, msg) {
+  isValidNextStep ({ tips, graph }, node) {
     if (graph) { // only for updates
       const rootKey = graph.rootKeys[0]
-      const rootMsg = graph.nodes.find(x => x.key === rootKey)
-      if (rootMsg && rootMsg.value.author !== msg.value.author)
+      const rootNode = graph.nodes.find(x => x.key === rootKey)
+      if (rootNode && rootNode.author !== node.author)
         return false
     }
 
