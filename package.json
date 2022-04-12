@@ -24,10 +24,10 @@
     "p-defer": "^3.0.0",
     "scuttle-testbot": "^1.5.2",
     "tap-bail": "^1.0.0",
-    "tap-spec": "^5.0.0",
+    "tap-arc": "^0.3.4",
     "tape": "^5.2.2"
   },
   "scripts": {
-    "test": "tape test/*.js | tap-bail | tap-spec"
+    "test": "tape test/*.js | tap-bail | tap-arc"
   }
 }
