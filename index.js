@@ -117,7 +117,11 @@ module.exports = {
           if (isInvited && !isMember) {
             const proofStr = consentId + 'fusion/proof-of-key'
             const privateKeyStr = secretKey + ".ed25519"
-            const data = { members: { add: [ssb.id] }, proofOfKey: ssbKeys.sign(privateKeyStr, proofStr) }
+            const data = {
+              subtype: 'fusion/proof-of-key',
+              members: { add: [ssb.id] },
+              proofOfKey: ssbKeys.sign(privateKeyStr, proofStr)
+            }
             crut.update(rootId, data, (err) => {
               if (err) console.error('failed to write proof-of-key', err)
 
@@ -143,7 +147,11 @@ module.exports = {
     return {
       create(cb) {
         const keys = getFusionKey()
-        const data = { id: keys.id, members: { add: [ssb.id] } }
+        const data = {
+          subtype: 'fusion/init',
+          id: keys.id,
+          members: { add: [ssb.id] }
+        }
         crut.create(data, (err, rootId) => {
           if (err) return cb(err)
 
@@ -164,11 +172,17 @@ module.exports = {
       },
 
       invite(fusion, peerId, cb) {
-        crut.update(fusion.rootId, { invited: { add: [peerId] } }, cb)
+        crut.update(fusion.rootId, {
+          subtype: 'fusion/invite',
+          invited: { add: [peerId] }
+        }, cb)
       },
 
       consent(fusion, cb) {
-        crut.update(fusion.rootId, { consented: { add: [ssb.id] } }, cb)
+        crut.update(fusion.rootId, {
+          subtype: 'fusion/consent',
+          consented: { add: [ssb.id] }
+        }, cb)
       },
 
       read(fusion, cb) {
