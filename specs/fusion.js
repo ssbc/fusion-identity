@@ -19,7 +19,7 @@ module.exports = {
     proofOfKey: Overwrite()
   },
 
-  isValidNextStep ({ tips, graph }, node) {
+  isValidNextStep ({ tips, graph }, node, ssb) {
     // members are different from consented because the creator is
     // automatically a member
 
@@ -59,14 +59,10 @@ module.exports = {
 
         if (!ok) return false
 
-        // FIXME: https://gitlab.com/ahau/lib/ssb-crut/-/issues/4
+        const fusionId = graph.nodes[0].data.id
+        const secretKey = ssb.box2.getGroupKey(fusionId)
 
-        return true
-
-        const fusionId = graph.nodes[0].value.content.id
-        const secretKey = server.box2.getGroupKey(fusionId)
-
-        const consentId = graph.nodes.find(x => x.value.author === author && x.value.content.consented).key
+        const consentId = graph.nodes.find(x => x.author === author && x.data.consented).key
 
         const proofStr = consentId + 'fusion/proof-of-key'
         const privateKeyStr = secretKey.toString('base64') + ".ed25519"

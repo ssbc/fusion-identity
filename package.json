@@ -16,15 +16,15 @@
   "dependencies": {
     "@tangle/overwrite": "^3.0.0",
     "@tangle/simple-set": "^3.0.0",
-    "ssb-crut": "^4.0.0",
+    "ssb-crut": "^4.3.0",
     "ssb-db2-box2": "^0.6.0",
     "ssb-uri2": "^1.6.0"
   },
   "devDependencies": {
     "p-defer": "^3.0.0",
     "scuttle-testbot": "^1.5.2",
-    "tap-bail": "^1.0.0",
     "tap-arc": "^0.3.4",
+    "tap-bail": "^1.0.0",
     "tape": "^5.2.2"
   },
   "scripts": {
