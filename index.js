@@ -79,10 +79,11 @@ module.exports = {
     const crut = new Crut(ssb, fusionSpec)
 
     function runAutomaticActions(msg) {
-      const { type, consented, tangles } = msg.value.content
+      const { type, subtype, consented, tangles } = msg.value.content
 
       if (type === 'fusion') {
         if (!tangles?.fusion) return
+        if (subtype !== 'fusion/consent') return
 
         // note this can result in multiple entrust but for now that
         // is okay, as the groups are small
