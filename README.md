@@ -56,15 +56,6 @@ Returns a list of all non-tombstoned fusion identities
 
 Returns a list of all tombstoned fusion identities 
 
-Automatic (run on post and on startup):
- - [!] Load keys on boot
- - [!] Proof of key
-   - trigger: entrust (private)
-   - add self to members
- - [!] Entrust
-   - trigger: consent
-   - send key to consented
-
 [fusion identity spec]: https://github.com/ssb-ngi-pointer/fusion-identity-spec
 [ssb-db2]: https://github.com/ssb-ngi-pointer/ssb-db2
 [ssb-db2-box2]: https://github.com/ssb-ngi-pointer/ssb-db2-box2
