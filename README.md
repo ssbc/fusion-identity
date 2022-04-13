@@ -18,9 +18,6 @@ Initializes the fusion identity code, meaning:
 
 Returns an objects with the following methods:
 
-
-The following methods work directly on a single fusion identity:
-
 ### create(cb)
 
 Create a new fusion identity and entrust yourself with the private key.
@@ -44,10 +41,6 @@ text description for the tombstoning.
 ### read(fusion, cb)
 
 Gets the current state of the fusion identity (members, invited, if tombstoned)
-
-
-
-The following methods work on all fusion identities:
 
 ### invitations(cb)
 
