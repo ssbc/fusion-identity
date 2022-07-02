@@ -44,20 +44,20 @@ module.exports = {
       },
 
       attest: {
-        create(redirectId, position, reason, cb) {
-          attestCrut.create({ target: redirectId, position, reason }, cb)
+        create(redirectId, position, description, cb) {
+          attestCrut.create({ target: redirectId, position, description }, cb)
         },
 
-        update(attestationId, position, reason, cb) {
-          attestCrut.update(attestationId, { position, reason }, cb)
+        update(attestationId, position, description, cb) {
+          attestCrut.update(attestationId, { position, description }, cb)
         },
 
         read(attestationId, cb) {
           attestCrut.read(attestationId, cb)
         },
 
-        tombstone(attestationId, reason, cb) {
-          attestCrut.tombstone(attestationId, { reason }, cb)
+        tombstone(attestationId, description, cb) {
+          attestCrut.tombstone(attestationId, { description }, cb)
         },
 
         all(redirectId, cb) {

@@ -127,14 +127,19 @@ test('tombstone', (t) => {
           fusion.tombstone(fusionData, 'bye', (err) => {
             t.error(err, 'no err for tombstone()')
 
-            fusion.all((err, fusions) => {
-              t.equal(fusions.length, 0, '0 active fusions')
+            fusion.invite(fusionData, bob.id, (err) => {
+              t.equal(err.message, 'Invalid update message, failed isValidNextStep, publish aborted',
+                      'not allowed to invite() after tombstone()')
 
-              fusion.tombstoned((err, fusions) => {
-                t.equal(fusions.length, 1, '1 tombstoned fusions')
+              fusion.all((err, fusions) => {
+                t.equal(fusions.length, 0, '0 active fusions')
 
-                bob.close()
-                alice.close(t.end)
+                fusion.tombstoned((err, fusions) => {
+                  t.equal(fusions.length, 1, '1 tombstoned fusions')
+
+                  bob.close()
+                  alice.close(t.end)
+                })
               })
             })
           })

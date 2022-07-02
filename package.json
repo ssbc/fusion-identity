@@ -5,18 +5,14 @@
   "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mixmix/fusion-identity-test.git"
+    "url": "https://github.com/ssbc/fusion-identity"
   },
-  "author": "",
+  "author": "Anders Rune Jensen <arj03@protonmail.ch>",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/mixmix/fusion-identity-test/issues"
-  },
-  "homepage": "https://github.com/mixmix/fusion-identity-test#readme",
   "dependencies": {
     "@tangle/overwrite": "^3.0.0",
     "@tangle/simple-set": "^3.0.0",
-    "ssb-crut": "^4.3.0",
+    "ssb-crut": "^4.6.0",
     "ssb-db2-box2": "^0.6.0",
     "ssb-uri2": "^1.6.0"
   },
@@ -24,10 +20,9 @@
     "p-defer": "^3.0.0",
     "scuttle-testbot": "^1.5.2",
     "tap-arc": "^0.3.4",
-    "tap-bail": "^1.0.0",
     "tape": "^5.2.2"
   },
   "scripts": {
-    "test": "tape test/*.js | tap-bail | tap-arc"
+    "test": "tape test/*.js | tap-arc --bail"
   }
 }
