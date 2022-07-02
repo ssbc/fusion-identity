@@ -11,7 +11,7 @@ module.exports = {
     }
   },
 
-  transformationProps: {
+  nextStepData: {
     subtype: {
       type: 'string',
     },

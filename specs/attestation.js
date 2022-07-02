@@ -10,11 +10,11 @@ module.exports = {
 
   props: {
     position: Overwrite(), // FIXME: enum: confirm|reject|null & required!
-    reason: Overwrite() // optional
+    description: Overwrite() // optional
   },
 
   isValidNextStep ({ tips, graph }, node) {
-    const { position, reason, tombstone } = node.data
+    const { position, description, tombstone } = node.data
 
     if (!tombstone)
       if (!position || (position.set !== 'confirm' && position.set !== 'reject'))
