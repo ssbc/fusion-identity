@@ -15,6 +15,9 @@ module.exports = {
     subtype: {
       type: 'string',
     },
+    consentId: {
+      type: 'string',
+    },
     proofOfKey: {
       type: 'string',
     }
@@ -30,7 +33,7 @@ module.exports = {
 
   isValidNextStep ({ tips, graph }, node, ssb) {
     const { author } = node
-    const { invited, consented, members, subtype, proofOfKey } = node.data
+    const { invited, consented, members, subtype, consentId, proofOfKey } = node.data
 
     // tombstone
     if (node.data.tombstone) {
@@ -90,14 +93,16 @@ module.exports = {
       const fusionId = graph.nodes[0].data.id
       const secretKey = ssb.box2.getGroupKey(fusionId)
 
-      const consentId = graph.nodes.find(x => x.author === author && x.data.consented).key
+      const consentMsgKey = graph.nodes.find(x => x.author === author && x.data.consented).key
+
+      if (consentId !== consentMsgKey)
+        return false
 
       const proofStr = consentId + 'fusion/proof-of-key'
       const privateKeyStr = secretKey.toString('base64') + ".ed25519"
       const reproduced = ssbKeys.sign(privateKeyStr, proofStr)
 
       const correctProof = proofOfKey === reproduced
-
       return correctProof
     }
 

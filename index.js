@@ -121,6 +121,7 @@ module.exports = {
             const data = {
               subtype: 'fusion/proof-of-key',
               members: { add: [ssb.id] },
+              consentId,
               proofOfKey: ssbKeys.sign(privateKeyStr, proofStr)
             }
             crut.update(rootId, data, (err) => {
